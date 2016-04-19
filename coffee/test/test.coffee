@@ -16,7 +16,7 @@ describe 'Medici', ->
 
 	it 'Should let you create a basic transaction', (done) ->
 		book = new medici.book('MyBook')
-		book.entry('Test Entry').debit('Assets:Receivable', 500).credit('Income:Rent', 500).commit().then (journal) =>
+		book.entry('Test Entry').debit('Assets:Receivable', 500, {clientId : "12345"}).credit('Income:Rent', 500).commit().then (journal) =>
 			journal.memo.should.equal('Test Entry')
 			journal._transactions.length.should.equal(2)
 			@journal = journal
@@ -74,12 +74,24 @@ describe 'Medici', ->
 
 	it 'should allow you to void a journal entry', (done) ->
 		book = new medici.book('MyBook')
+		book.balance
+			account:'Assets'
+			clientId : "12345"
+		.then (data3) ->
+			data.balance.should.equal(-500)
+
 		book.void(@journal._id, 'Messed up').then ->
 			book.balance
 				account:'Assets'
 			.then (data) ->
 				data.balance.should.equal(-700)
-				done()
+				book.balance
+					account:'Assets'
+					clientId : "12345"
+				.then (data2) ->
+					console.log 'GOT Client filtered data!' + data2.balance
+					data2.balance.should.equal(0)
+					done()
 
 	it 'should list all accounts', (done) ->
 		book = new medici.book('MyBook')

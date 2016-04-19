@@ -1,4 +1,4 @@
-var Q, Schema, book, entry, err, journalSchema, mongoose, transactionSchema, _;
+var Q, Schema, book, entry, err, journalSchema, mongoose, processMetaField, transactionSchema, _;
 
 entry = require('./lib/entry');
 
@@ -11,6 +11,14 @@ Schema = mongoose.Schema;
 Q = require('q');
 
 _ = require('underscore');
+
+processMetaField = function(valid_fields, key, val, meta) {
+  if (key === '_id' || key === '_journal') {
+
+  } else if (valid_fields.indexOf(key) === -1) {
+    return meta[key] = val;
+  }
+};
 
 try {
   mongoose.model('Medici_Transaction');
@@ -110,7 +118,7 @@ try {
       voids.push(voidTransaction(trans_id));
     }
     Q.all(voids).then(function(transactions) {
-      var key, meta, newMemo, trans, val, valid_fields, _j, _len1;
+      var key, key2, meta, newMemo, trans, val, val2, valid_fields, _j, _len1, _ref1;
       if (_this.void_reason) {
         newMemo = _this.void_reason;
       } else {
@@ -132,11 +140,14 @@ try {
         meta = {};
         for (key in trans) {
           val = trans[key];
-          if (key === '_id' || key === '_journal') {
-            continue;
-          }
-          if (valid_fields.indexOf(key) === -1) {
-            meta[key] = val;
+          if (key === 'meta') {
+            _ref1 = trans['meta'];
+            for (key2 in _ref1) {
+              val2 = _ref1[key2];
+              processMetaField(valid_fields, key2, val2, meta);
+            }
+          } else {
+            processMetaField(valid_fields, key, val, meta);
           }
         }
         if (trans.credit) {

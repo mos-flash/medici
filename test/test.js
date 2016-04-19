@@ -15,7 +15,7 @@ require('should');
 moment = require('moment');
 
 describe('Medici', function() {
-  this.timeout(15000);
+  this.timeout(10000);
   before(function(done) {
     mongoose.connection.collections.medici_transactions.drop();
     mongoose.connection.collections.medici_journals.drop();
@@ -25,7 +25,9 @@ describe('Medici', function() {
     var book,
       _this = this;
     book = new medici.book('MyBook');
-    return book.entry('Test Entry').debit('Assets:Receivable', 500).credit('Income:Rent', 500).commit().then(function(journal) {
+    return book.entry('Test Entry').debit('Assets:Receivable', 500, {
+      clientId: "12345"
+    }).credit('Income:Rent', 500).commit().then(function(journal) {
       journal.memo.should.equal('Test Entry');
       journal._transactions.length.should.equal(2);
       _this.journal = journal;
@@ -87,12 +89,25 @@ describe('Medici', function() {
   it('should allow you to void a journal entry', function(done) {
     var book;
     book = new medici.book('MyBook');
+    book.balance({
+      account: 'Assets',
+      clientId: "12345"
+    }).then(function(data3) {
+      return data.balance.should.equal(-500);
+    });
     return book["void"](this.journal._id, 'Messed up').then(function() {
       return book.balance({
         account: 'Assets'
       }).then(function(data) {
         data.balance.should.equal(-700);
-        return done();
+        return book.balance({
+          account: 'Assets',
+          clientId: "12345"
+        }).then(function(data2) {
+          console.log('GOT Client filtered data!' + data2.balance);
+          data2.balance.should.equal(0);
+          return done();
+        });
       });
     });
   });

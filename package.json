@@ -1,6 +1,6 @@
 {
   "name": "medici",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Simple double-entry accounting for Node + Mongoose",
   "main": "index.js",
   "scripts": {
@@ -23,10 +23,10 @@
     "url": "https://github.com/jraede/medici/issues"
   },
   "dependencies": {
-    "underscore": "~1.5.2",
-    "mongoose": "~3.8.0",
+    "underscore": "~1.8.3",
+    "mongoose": "~4.3.6",
     "q": "*",
-    "moment": "~2.5.1"
+    "moment": "~2.13"
   },
   "readme": "medici\n======\n\nDouble-entry accounting system for nodejs + mongoose\n",
   "readmeFilename": "README.md",

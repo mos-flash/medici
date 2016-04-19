@@ -5,6 +5,11 @@ Schema = mongoose.Schema
 Q = require('q')
 _ = require('underscore')
 
+processMetaField = (valid_fields, key, val, meta) ->
+	if key is '_id' or key is '_journal'
+	else if valid_fields.indexOf(key) is -1
+		meta[key] = val
+
 # This lets you register your own schema before including Medici. Useful if you want to store additional information
 # along side each transaction
 try 
@@ -112,10 +117,11 @@ catch err
 				trans = trans.toObject()
 				meta = {}
 				for key,val of trans
-					if key is '_id' or key is '_journal'
-						continue
-					if valid_fields.indexOf(key) is -1
-						meta[key] = val
+					if key is 'meta'
+						for key2,val2 of trans['meta']
+							processMetaField(valid_fields, key2, val2, meta)
+					else
+						processMetaField(valid_fields, key, val, meta)
 				if trans.credit
 					entry.debit(trans.account_path, trans.credit, meta)
 				if trans.debit
