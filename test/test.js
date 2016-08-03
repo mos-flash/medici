@@ -15,7 +15,7 @@ require('should');
 moment = require('moment');
 
 describe('Medici', function() {
-  this.timeout(10000);
+  this.timeout(3000);
   before(function(done) {
     mongoose.connection.collections.medici_transactions.drop();
     mongoose.connection.collections.medici_journals.drop();
@@ -180,7 +180,7 @@ describe('Medici', function() {
       });
     });
   });
-  return describe('approved/pending transactions', function() {
+  describe('approved/pending transactions', function() {
     it('should not include pending transactions in balance', function(done) {
       var book,
         _this = this;
@@ -215,6 +215,29 @@ describe('Medici', function() {
           account: 'Bar'
         }).then(function(data) {
           data.balance.should.equal(500);
+          return done();
+        });
+      });
+    });
+  });
+  return describe('complex transaction cases', function() {
+    return it('Should handle 4th DP rounding imbalances', function(done) {
+      var book,
+        _this = this;
+      book = new medici.book('ComplexBook');
+      return book.entry('Complex Test Entry').debit('Assets:Receivable', 50.00, {
+        clientId: "12345"
+      }).credit('Income:Rent', 40.27).credit('Income:GST', 9.73).commit().then(function(journal) {
+        console.log('Journal 1 == ' + JSON.stringify(journal, 2, null));
+        journal.memo.should.equal('Complex Test Entry');
+        journal._transactions.length.should.equal(3);
+        _this.journal = journal;
+        return book.entry('Test Entry 2', moment().subtract('days', 3).toDate()).debit('Assets:Receivable', 700).credit('Income:Rent', 700).commit().then(function(journal) {
+          console.log('Journal 2 == ' + JSON.stringify(journal, 2, null));
+          _this.journal2 = journal;
+          journal.book.should.equal('ComplexBook');
+          journal.memo.should.equal('Test Entry 2');
+          journal._transactions.length.should.equal(2);
           return done();
         });
       });

@@ -114,8 +114,8 @@ module.exports = class Entry
 		for transaction in @transactions
 			total += transaction.credit
 			total -= transaction.debit
-		if total > 0 or total < 0
-			err = new Error("INVALID_JOURNAL")
+		if total > 0.0001 or total < -0.0001
+			err = new Error("INVALID_JOURNAL : (non 0 balance " + total + ')')
 			err.code = 400
 			console.error 'Journal is invalid. Total is:', total
 			deferred.reject(err)

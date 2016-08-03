@@ -8,7 +8,7 @@ medici = require '../index'
 require 'should'
 moment = require 'moment'
 describe 'Medici', ->
-	@timeout(15000)
+	@timeout(3000)
 	before (done) ->
 		mongoose.connection.collections.medici_transactions.drop()
 		mongoose.connection.collections.medici_journals.drop()
@@ -181,7 +181,18 @@ describe 'Medici', ->
 					data.balance.should.equal(500)
 					done()
 
-			
-		
-
-
+	describe 'complex transaction cases',  ->
+		it 'Should handle 4th DP rounding imbalances', (done) ->
+			book = new medici.book('ComplexBook')
+			book.entry('Complex Test Entry').debit('Assets:Receivable', 50.00, {clientId : "12345"}).credit('Income:Rent', 40.27).credit('Income:GST', 9.73).commit().then (journal) =>
+				console.log 'Journal 1 == ' + JSON.stringify(journal, 2, null)
+				journal.memo.should.equal('Complex Test Entry')
+				journal._transactions.length.should.equal(3)
+				@journal = journal
+				book.entry('Test Entry 2', moment().subtract('days', 3).toDate()).debit('Assets:Receivable', 700).credit('Income:Rent', 700).commit().then (journal) =>
+					console.log 'Journal 2 == ' + JSON.stringify(journal, 2, null)
+					@journal2 = journal
+					journal.book.should.equal('ComplexBook')
+					journal.memo.should.equal('Test Entry 2')
+					journal._transactions.length.should.equal(2)
+					done()
